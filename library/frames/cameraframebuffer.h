@@ -42,6 +42,7 @@ protected:
     CameraFrame *getNextIndex(unsigned &index);
 
     void print();
+    void check();
 
 protected:
     std::mutex mutex;

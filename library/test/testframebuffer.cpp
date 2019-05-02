@@ -17,14 +17,13 @@ void TestFrameBuffer::generateNewData()
 {
     TestFrame *frame = static_cast<TestFrame *>(getNewCurrent());
 
-    //for (int i = 0; i < 0; ++i) {
-    //    frame->data[i] = 0;
-    //}
-
     if (frame) {
-        frame->updateTimestamp();
+        //for (int i = 0; i < 0; ++i) {
+        //    frame->data[i] = 0;
+        //}
         setNewReady(frame);
     }
+    check();
 }
 
 TestFrameBuffer::Frame TestFrameBuffer::castFrame(CameraFrame *frame)

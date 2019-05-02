@@ -33,7 +33,7 @@ protected:
 
 private:
     unsigned id = 0;
-    bool valid = true; // false
+    bool valid = false;
     unsigned semaphore = 0;
     int64_t timestamp = 0;
 

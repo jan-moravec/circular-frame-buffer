@@ -23,6 +23,8 @@ void CameraFrameBuffer::initializeFrames(unsigned n)
     }
 
     connectFrames();
+    print();
+    check();
 }
 
 void CameraFrameBuffer::connectFrames()
@@ -143,7 +145,6 @@ CameraFrame *CameraFrameBuffer::getLast(CameraFrame *frame)
 void CameraFrameBuffer::release(CameraFrame *frame)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    std::cout << __PRETTY_FUNCTION__ << ": " << frame->getId() << std::endl;
     frame->release();
 }
 
@@ -200,42 +201,36 @@ CameraFrame *CameraFrameBuffer::getNewCurrent()
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    // Find next available frame by index, so we can include skipped ones
-    std::vector<CameraFrame *> skipped_temp;
-    unsigned index = current->getId();
-    CameraFrame *frame = current;
-    do {
-        frame = getNextIndex(index);
-
-        if (frame == current) {
-            return nullptr;
+    CameraFrame *frame = nullptr;
+    // Try if skipped frames are available
+    for (CameraFrame *f: skipped) {
+        if (f->isValid() && !f->isUsed()) {
+            skipped.erase(f);
+            frame = f;
+            break;
         }
-
-        if (!frame->isValid() || frame->isUsed()) {
-            skipped_temp.push_back(frame);
-        }
-
-    } while (!frame->isValid() || frame->isUsed()); // We need to skip taken and invalid frames
-
-    for (int i = 0; i < skipped_temp.size(); ++i) {
-        skipped.insert(skipped_temp.at(i));
     }
 
-    std::cout << __PRETTY_FUNCTION__ << "A: " << frame->getId() << " "  << current->getId() << " " << final->getId() << std::endl;
-    // Update final. If available frame is skipped one, do not move final. TODO how to check if frame is skipped
-    bool isskipped = skipped.find(frame) != skipped.end();
-    if (!isskipped) {
+    // If not, find next available frame
+    if (frame == nullptr) {
+        frame = current;
+        while (true) {
+            frame = frame->getNext();
+
+            if (frame == current) {
+                return nullptr;
+            }
+
+            if ((frame->isValid() && !frame->isUsed()) || frame->getTimestamp() == 0) {
+                break;
+            } else {
+                skipped.insert(frame); // Save the skipped ones
+            }
+        }
+
+        // Update final. If available frame is skipped one, do not move final.
         final = frame->getNext();
-    }// else if (frame != current->getNext()) { // TODO && (current->getNext()->isValid() && !current->getNext()->isUsed()
-    //    final = frame->getNext();
-    //}
-
-    /*CameraFrame *next = frame->getNext();
-    CameraFrame *last = frame->getLast();
-    last->setNext(next);
-    next->setLast(last);*/
-
-    std::cout << __PRETTY_FUNCTION__ << "B: " << frame->getId() << " "  << current->getId() << " " << final->getId() << std::endl;
+    }
 
     current->setNext(frame);
     frame->setLast(current);
@@ -247,7 +242,8 @@ CameraFrame *CameraFrameBuffer::getNewCurrent()
     current->setNext(final);
     final->setLast(current);
 
-    std::cout << __PRETTY_FUNCTION__ << "C: " << frame->getId() << " "  << current->getId() << " " << final->getId() << std::endl;
+    print();
+    frame->updateTimestamp();
     frame->setValid(false);
     return frame;
 }
@@ -256,6 +252,7 @@ void CameraFrameBuffer::setNewReady(CameraFrame *frame)
 {
     std::lock_guard<std::mutex> lock(mutex);
     frame->setValid(true);
+    newFrameReady();
 }
 
 CameraFrame *CameraFrameBuffer::getNextIndex(unsigned &index)
@@ -272,18 +269,57 @@ CameraFrame *CameraFrameBuffer::getNextIndex(unsigned &index)
 void CameraFrameBuffer::print()
 {
     int counter = 0;
-    CameraFrame *frame = final;
-    std::cout << frame->getId();
+    CameraFrame *frame = current;
     do {
         frame = frame->getNext();
-        std::cout << " -> " << frame->getId();
+        if (frame == current) {
+            std::cout << "{" << frame->getId() << "}" << std::endl;
+        } else if (frame == final) {
+        std::cout << "[" << frame->getId() << "]" << " -> ";
+        } else {
+            std::cout << frame->getId() << " -> ";
+        }
         counter++;
-    } while (frame != final);
-    std::cout << std::endl;
+    } while (frame != current);
 
     std::cout << __PRETTY_FUNCTION__ << ": Total frames = " << counter << std::endl;
 
     for (CameraFrame *frame: frames) {
         frame->print();
+    }
+}
+
+void CameraFrameBuffer::check()
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    unsigned counter = 0;
+    CameraFrame *frame = current;
+    do {
+        frame = frame->getNext();
+        counter++;
+    } while (frame != current);
+
+    if (counter > frames.size()) {
+        std::cerr << __PRETTY_FUNCTION__ << ": Error in frame pointers!" << std::endl;
+    }
+
+    if (current->next != final || final->last != current) {
+        std::cerr << __PRETTY_FUNCTION__ << ": Error in current final!" << std::endl;
+    }
+
+    frame = final;
+    do {
+        std::cerr << __PRETTY_FUNCTION__ << ": " << frame->getId() << " - " << frame->getTimestamp() << std::endl;
+        if (frame->getTimestamp() > frame->getNext()->getTimestamp()) {
+            std::cerr << __PRETTY_FUNCTION__ << ": Error in timestamp!" << std::endl;
+        }
+        frame = frame->getNext();
+    } while (frame != current);
+    std::cerr << __PRETTY_FUNCTION__ << ": " << frame->getId() << " - " << frame->getTimestamp() << std::endl;
+
+    for (CameraFrame *frame: frames) {
+        if (frame->isUsed() && !frame->isValid()) {
+            std::cerr << __PRETTY_FUNCTION__ << ": Error in usage!" << std::endl;
+        }
     }
 }

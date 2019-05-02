@@ -64,11 +64,13 @@ void CameraFrame::setValid(bool valid)
 
 void CameraFrame::hold()
 {
+    std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
     semaphore++;
 }
 
 void CameraFrame::release()
 {
+    std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
     if (semaphore == 0) {
         return;
     }
