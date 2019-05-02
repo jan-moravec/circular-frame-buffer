@@ -1,8 +1,15 @@
 #include "cameraframe.h"
 #include <chrono>
+#include <iostream>
 
 CameraFrame::CameraFrame(unsigned id): id(id)
 {
+    std::cout << __PRETTY_FUNCTION__ << ": " << id << std::endl;
+}
+
+CameraFrame::~CameraFrame()
+{
+    std::cout << __PRETTY_FUNCTION__ << ": " << id << std::endl;
 }
 
 CameraFrame *CameraFrame::getNext() const
@@ -72,4 +79,9 @@ void CameraFrame::release()
 bool CameraFrame::isUsed()
 {
     return (semaphore != 0);
+}
+
+void CameraFrame::print()
+{
+    std::cout << last->getId() << " <- " << getId() << " -> " << next->getId() << std::endl;
 }

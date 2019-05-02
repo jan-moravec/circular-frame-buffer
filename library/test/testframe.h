@@ -6,7 +6,15 @@
 class TestFrame: public CameraFrame
 {
 public:
+    friend class TestFrameBuffer;
+
     TestFrame(unsigned id);
+    ~TestFrame();
+
+    const unsigned *getData() { return data; }
+
+protected:
+    unsigned *data = nullptr;
 };
 
 #endif // TESTFRAME_H

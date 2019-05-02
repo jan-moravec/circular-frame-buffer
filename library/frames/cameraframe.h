@@ -9,10 +9,11 @@ public:
     friend class CameraFrameBuffer;
 
     CameraFrame(unsigned id);
-    virtual ~CameraFrame() {}
+    virtual ~CameraFrame();
 
     unsigned getId() const;
     int64_t getTimestamp() const;
+    void print();
 
 protected:
     CameraFrame *getNext() const;
@@ -32,7 +33,7 @@ protected:
 
 private:
     unsigned id = 0;
-    bool valid = false;
+    bool valid = true; // false
     unsigned semaphore = 0;
     int64_t timestamp = 0;
 
