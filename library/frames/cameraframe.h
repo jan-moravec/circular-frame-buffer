@@ -31,6 +31,8 @@ protected:
     void release();
     bool isUsed();
 
+    bool debug = false;
+
 private:
     unsigned id = 0;
     bool valid = false;

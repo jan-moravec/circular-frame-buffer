@@ -14,6 +14,9 @@ public:
     virtual ~CameraFrameBuffer();
 
     void waitForNew();
+    void setDebug(bool on);
+    void print();
+    void check();
 
 protected:
     void initializeFrames(unsigned n);
@@ -22,7 +25,9 @@ protected:
     CameraFrame *getNth(unsigned nth);
     std::vector<CameraFrame *> getCurrentN(unsigned n);
     CameraFrame *getFinal();
+    std::vector<CameraFrame *> getFinalN(unsigned n);
     CameraFrame *getNext(CameraFrame *frame);
+    CameraFrame *getNextWait();
     CameraFrame *getNextWait(CameraFrame *frame);
     std::vector<CameraFrame *> getNextWaitN(unsigned n);
     CameraFrame *getLast(CameraFrame *frame);
@@ -41,9 +46,6 @@ protected:
     void setNewReady(CameraFrame *frame);
     CameraFrame *getNextIndex(unsigned &index);
 
-    void print();
-    void check();
-
 protected:
     std::mutex mutex;
     std::condition_variable new_frame_ready;
@@ -52,6 +54,8 @@ protected:
     CameraFrame *current = nullptr;
     CameraFrame *final = nullptr;
     std::set<CameraFrame *> skipped;
+
+    bool debug = false;
 };
 
 #endif // CAMERAFRAMEBUFFER_H

@@ -11,28 +11,31 @@ public:
     TestFrameBuffer();
     ~TestFrameBuffer();
 
-    void initialize();
+    void initialize(unsigned n);
     void generateNewData();
 
     using frameReleaser = std::function<void(TestFrame *)>;
     using Frame = std::unique_ptr< TestFrame, frameReleaser >;
 
-    Frame getCurrent() { return castFrame(CameraFrameBuffer::getCurrent()); }
-    Frame getNth(unsigned nth) { return castFrame(CameraFrameBuffer::getNth(nth)); }
-    Frame getFinal() { return castFrame(CameraFrameBuffer::getFinal()); }
-    Frame getNext(const Frame &frame) { return castFrame(CameraFrameBuffer::getNext(frame.get())); }
-    Frame getNextWait(const Frame &frame) { return castFrame(CameraFrameBuffer::getNextWait(frame.get())); }
-    std::vector<Frame> getNextWaitN(unsigned n) { return castFrameVector(CameraFrameBuffer::getNextWaitN(n)); }
-    Frame getLast(const Frame &frame) { return castFrame(CameraFrameBuffer::getLast(frame.get())); }
-    std::vector<Frame> getCurrentN(unsigned n) { return castFrameVector(CameraFrameBuffer::getCurrentN(n)); }
+    Frame getCurrent();
+    Frame getNth(unsigned nth);
+    Frame getFinal();
+    Frame getNext(const Frame &frame);
+    Frame getNextWait();
+    Frame getNextWait(const Frame &frame);
+    std::vector<Frame> getNextWaitN(unsigned n);
+    Frame getLast(const Frame &frame);
+    std::vector<Frame> getCurrentN(unsigned n);
+    std::vector<Frame> getFinalN(unsigned n);
 
 protected:
-    CameraFrame *newFrame(unsigned id) override { return new TestFrame(id); }
+    CameraFrame *newFrame(unsigned id) override { return new TestFrame(800, 600, id); }
+    unsigned counter = 0;
 
 private:
     const frameReleaser releaser = [this](TestFrame *frame) { release(frame); };
-    Frame castFrame(CameraFrame *frame);
-    std::vector<Frame> castFrameVector(const std::vector<CameraFrame *> &frames);
+    inline Frame castFrame(CameraFrame *frame);
+    inline std::vector<Frame> castFrameVector(const std::vector<CameraFrame *> &frames);
 };
 
 #endif // TESTFRAMEBUFFER_H

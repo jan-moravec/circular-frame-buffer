@@ -8,13 +8,17 @@ class TestFrame: public CameraFrame
 public:
     friend class TestFrameBuffer;
 
-    TestFrame(unsigned id);
+    TestFrame(unsigned width, unsigned height, unsigned id);
     ~TestFrame();
 
     const unsigned *getData() { return data; }
+    unsigned getWidth() { return width; }
+    unsigned getHeight() { return height; }
 
 protected:
-    unsigned *data = nullptr;
+    unsigned width;
+    unsigned height;
+    unsigned *data;
 };
 
 #endif // TESTFRAME_H

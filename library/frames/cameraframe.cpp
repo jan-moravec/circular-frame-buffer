@@ -4,12 +4,16 @@
 
 CameraFrame::CameraFrame(unsigned id): id(id)
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << id << std::endl;
+    if (debug) {
+        std::cout << __PRETTY_FUNCTION__ << ": " << id << std::endl;
+    }
 }
 
 CameraFrame::~CameraFrame()
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << id << std::endl;
+    if (debug) {
+        std::cout << __PRETTY_FUNCTION__ << ": " << id << std::endl;
+    }
 }
 
 CameraFrame *CameraFrame::getNext() const
@@ -64,13 +68,17 @@ void CameraFrame::setValid(bool valid)
 
 void CameraFrame::hold()
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    if (debug) {
+        std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    }
     semaphore++;
 }
 
 void CameraFrame::release()
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    if (debug) {
+        std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    }
     if (semaphore == 0) {
         return;
     }

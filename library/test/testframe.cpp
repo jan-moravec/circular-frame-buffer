@@ -1,13 +1,20 @@
 #include "testframe.h"
 #include <iostream>
 
-TestFrame::TestFrame(unsigned id): CameraFrame(id)
+TestFrame::TestFrame(unsigned width, unsigned height, unsigned id): CameraFrame(id), width(width), height(height)
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    if (debug) {
+        std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    }
+
+    data = new unsigned[width * height];
 }
 
 TestFrame::~TestFrame()
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    if (debug) {
+        std::cout << __PRETTY_FUNCTION__ << ": " << getId() << std::endl;
+    }
+
     delete[] data;
 }

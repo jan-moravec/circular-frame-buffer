@@ -7,8 +7,6 @@ CameraFrameBuffer::CameraFrameBuffer()
 
 CameraFrameBuffer::~CameraFrameBuffer()
 {
-    print();
-
     for (CameraFrame *frame: frames) {
         delete frame;
     }
@@ -23,8 +21,7 @@ void CameraFrameBuffer::initializeFrames(unsigned n)
     }
 
     connectFrames();
-    print();
-    check();
+    setDebug(debug);
 }
 
 void CameraFrameBuffer::connectFrames()
@@ -64,19 +61,20 @@ CameraFrame *CameraFrameBuffer::getNth(unsigned nth)
 
 std::vector<CameraFrame *> CameraFrameBuffer::getCurrentN(unsigned n)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     if (n >= frames.size()) {
         n = frames.size() - 1;
     }
 
     std::vector<CameraFrame *> taken_frames;
-    CameraFrame *frame = getCurrent();
+    CameraFrame *frame = getLastValid(current);
     if (!frame) {
         return taken_frames;
     }
     taken_frames.push_back(frame);
 
     for (unsigned i = 1; i < n; ++i) {
-        CameraFrame *frame = getLast(taken_frames.back());
+        CameraFrame *frame = getLastValid(taken_frames.back()->getLast());
         if (!frame) {
             return taken_frames;
         }
@@ -93,10 +91,57 @@ CameraFrame *CameraFrameBuffer::getFinal(void)
     return getNextValid(final);
 }
 
+std::vector<CameraFrame *> CameraFrameBuffer::getFinalN(unsigned n)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    if (n >= frames.size()) {
+        n = frames.size() - 1;
+    }
+
+    std::vector<CameraFrame *> taken_frames;
+    CameraFrame *frame = getNextValid(final);
+    if (!frame) {
+        return taken_frames;
+    }
+    taken_frames.push_back(frame);
+
+    for (unsigned i = 1; i < n; ++i) {
+        CameraFrame *frame = getNextValid(taken_frames.back()->getNext());
+        if (!frame) {
+            return taken_frames;
+        }
+        taken_frames.push_back(frame);
+    }
+
+    return taken_frames;
+}
+
 CameraFrame *CameraFrameBuffer::getNext(CameraFrame *frame)
 {
     std::lock_guard<std::mutex> lock(mutex);
     return getNextValid(frame->getNext());
+}
+
+CameraFrame *CameraFrameBuffer::getNextWait()
+{
+    return getNextWait(current);
+}
+
+CameraFrame *CameraFrameBuffer::getNextWait(CameraFrame *frame)
+{
+    CameraFrame *frameNext;
+
+    while (true) {
+        frameNext = getNext(frame);
+        if (frameNext) {
+            break;
+        } else {
+            std::unique_lock<std::mutex> lck(mutex);
+            new_frame_ready.wait(lck);
+        }
+    }
+
+    return frameNext;
 }
 
 std::vector<CameraFrame *> CameraFrameBuffer::getNextWaitN(unsigned n)
@@ -117,23 +162,6 @@ std::vector<CameraFrame *> CameraFrameBuffer::getNextWaitN(unsigned n)
     }
 
     return taken_frames;
-}
-
-CameraFrame *CameraFrameBuffer::getNextWait(CameraFrame *frame)
-{
-    CameraFrame *frameNext;
-
-    while (true) {
-        frameNext = getNext(frame);
-        if (frameNext) {
-            break;
-        } else {
-            std::unique_lock<std::mutex> lck(mutex);
-            new_frame_ready.wait(lck);
-        }
-    }
-
-    return frameNext;
 }
 
 CameraFrame *CameraFrameBuffer::getLast(CameraFrame *frame)
@@ -242,7 +270,6 @@ CameraFrame *CameraFrameBuffer::getNewCurrent()
     current->setNext(final);
     final->setLast(current);
 
-    print();
     frame->updateTimestamp();
     frame->setValid(false);
     return frame;
@@ -266,8 +293,18 @@ CameraFrame *CameraFrameBuffer::getNextIndex(unsigned &index)
     return frames.at(index);
 }
 
+void CameraFrameBuffer::setDebug(bool on)
+{
+    debug = on;
+
+    for (CameraFrame *frame: frames) {
+        frame->debug = on;
+    }
+}
+
 void CameraFrameBuffer::print()
 {
+    std::lock_guard<std::mutex> lock(mutex);
     int counter = 0;
     CameraFrame *frame = current;
     do {
@@ -309,13 +346,13 @@ void CameraFrameBuffer::check()
 
     frame = final;
     do {
-        std::cerr << __PRETTY_FUNCTION__ << ": " << frame->getId() << " - " << frame->getTimestamp() << std::endl;
+        //std::cerr << __PRETTY_FUNCTION__ << ": " << frame->getId() << " - " << frame->getTimestamp() << std::endl;
         if (frame->getTimestamp() > frame->getNext()->getTimestamp()) {
             std::cerr << __PRETTY_FUNCTION__ << ": Error in timestamp!" << std::endl;
         }
         frame = frame->getNext();
     } while (frame != current);
-    std::cerr << __PRETTY_FUNCTION__ << ": " << frame->getId() << " - " << frame->getTimestamp() << std::endl;
+    //std::cerr << __PRETTY_FUNCTION__ << ": " << frame->getId() << " - " << frame->getTimestamp() << std::endl;
 
     for (CameraFrame *frame: frames) {
         if (frame->isUsed() && !frame->isValid()) {
