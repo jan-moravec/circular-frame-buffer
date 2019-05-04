@@ -282,17 +282,6 @@ void CameraFrameBuffer::setNewReady(CameraFrame *frame)
     newFrameReady();
 }
 
-CameraFrame *CameraFrameBuffer::getNextIndex(unsigned &index)
-{
-    index++;
-
-    if (index >= frames.size()) {
-        index = 0;
-    }
-
-    return frames.at(index);
-}
-
 void CameraFrameBuffer::setDebug(bool on)
 {
     debug = on;

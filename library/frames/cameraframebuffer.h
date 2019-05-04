@@ -13,14 +13,15 @@ public:
     CameraFrameBuffer();
     virtual ~CameraFrameBuffer();
 
-    void waitForNew();
+    void waitForNew(); /// Will block the thread until new frame is ready
     void setDebug(bool on);
     void print();
     void check();
 
 protected:
-    void initializeFrames(unsigned n);
+    void initializeFrames(unsigned n); /// Create buffer with N frames
 
+    /// Functions for accessing the frames
     CameraFrame *getCurrent();
     CameraFrame *getNth(unsigned nth);
     std::vector<CameraFrame *> getCurrentN(unsigned n);
@@ -32,19 +33,18 @@ protected:
     std::vector<CameraFrame *> getNextWaitN(unsigned n);
     CameraFrame *getLast(CameraFrame *frame);
 
-    void release(CameraFrame *frame);
+    void release(CameraFrame *frame); /// Do not forget to release taken frames
 
 protected:
-    virtual CameraFrame *newFrame(unsigned id) = 0;
+    virtual CameraFrame *newFrame(unsigned id) = 0; /// Create new frame of child class
     void connectFrames();
 
+    CameraFrame *getNewCurrent(); /// Get frame for updating with new data
+    void setNewReady(CameraFrame *frame); /// Once updated, set as ready
     void newFrameReady();
+
     CameraFrame *getNextValid(CameraFrame *frame);
     CameraFrame *getLastValid(CameraFrame *frame);
-
-    CameraFrame *getNewCurrent();
-    void setNewReady(CameraFrame *frame);
-    CameraFrame *getNextIndex(unsigned &index);
 
 protected:
     std::mutex mutex;
