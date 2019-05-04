@@ -27,7 +27,7 @@ I am using C++11, so newer toolchain is needed. Also I am using the __PRETTY_FUN
 
 ## Classes Description
 
-### CameraFrame [library/frames/cameraframe.h](CameraFrame)
+### CameraFrame [CameraFrame](library/frames/cameraframe.h)
 
 Basic class design to contain the data. It's got the semaphore - a counter, which increases once the frame is taken and decreases once its released.
 
@@ -35,11 +35,11 @@ It also has a pointer to next and previous frame.
 
 There are no mutexes, all is controlled from CameraFrameBuffer.
 
-### TestFrame [library/test/testframe.h](TestFrame)
+### TestFrame [TestFrame](library/test/testframe.h)
 
 Example of CameraFrame usage - just inherit from it and add your data and other information.
 
-### CameraFrameBuffer [library/frames/cameraframebuffer.h](CameraFrameBuffer)
+### CameraFrameBuffer [CameraFrameBuffer](library/frames/cameraframebuffer.h)
 
 This class does all the heavy lifting - it controlles the shared memory (CameraFrame frames) access.
 
@@ -55,7 +55,7 @@ Then there are multiple functions for accessing the CameraFrame frames. They are
 
 There is no function for generating new data - this must be in its derived child class.
 
-### TestFrameBuffer [library/test/testframebuffer.h](TestFrameBuffer)
+### TestFrameBuffer [TestFrameBuffer](library/test/testframebuffer.h)
 
 This class works with the TestFrame frames. It hast a function for generating the data, function for creating a new frame:
 ```
