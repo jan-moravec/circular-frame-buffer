@@ -21,6 +21,11 @@ All these actions must be thread safe and as fast as possible. Once the thread t
 
 The project has two classes and main.cpp, in which the classes are tested.
 
+I wrote the project in Qt Creator, but it can be compiled with command:
+```
+g++ main.cpp library/frames/cameraframebuffer.cpp library/frames/cameraframe.cpp library/test/testframe.cpp library/test/testframebuffer.cpp -pthread -I./
+```
+
 ### Prerequisites
 
 I am using C++11, so newer toolchain is needed. Also, I am using the __PRETTY_FUNCTION__ macro, which I think is GCC extension. If this is an issue, just use __func__ instead.
