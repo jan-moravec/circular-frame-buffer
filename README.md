@@ -1,10 +1,10 @@
 # Circular Frame Buffer
 
-I need to work with frames from thermocamera in emebedded device, where performance is the main issue. The data must be accessible from different threads. So I created these classes for representing the camera data and for accesing the data itself safely.
+I need to work with frames from thermocamera in embedded device, where performance is the main issue. The data must be accessible from different threads. So I created these classes for representing the camera data and for accessing the data itself safely.
 
 Assignment:
 - Have N frames or measurements (any piece of data).
-- Acces them from multiple threads.
+- Access them from multiple threads.
 - Generate the frames from multiple threads.
 - The data itself must be shared memory due to performance.
 
@@ -12,10 +12,10 @@ Assignment:
 
 For example, there is one thread generating the data. It is saving the data to circular buffer - in frames. The buffer must know, which frame is the newest and which is the oldest.
 
-There are multiple threads accesing the data. There is a thread that waits for the new frame and once its ready, it displays its content.
-Then there is a thread that does a measurement on N frames on command, so it takes current frame and N-1 previous frames and does its measurements.
+There are multiple threads accessing the data. There is a thread that waits for the new frame and once its ready, it displays its content.
+Then there is a thread that does a measurement on N frames on command, so it takes the current frame and N-1 previous frames and does its measurements.
 
-All these actions must be thread safe and fast as possible. Once the thread takes a frame, it can access its data until the frame is released again.
+All these actions must be thread safe and as fast as possible. Once the thread takes a frame, it can access its data until the frame is released again.
 
 ## Getting Started
 
@@ -23,13 +23,13 @@ The project has two classes and main.cpp, in which the classes are tested.
 
 ### Prerequisites
 
-I am using C++11, so newer toolchain is needed. Also I am using the __PRETTY_FUNCTION__ macro, which I think is gcc extension. If this is an issue, just use __func__ instead.
+I am using C++11, so newer toolchain is needed. Also, I am using the __PRETTY_FUNCTION__ macro, which I think is GCC extension. If this is an issue, just use __func__ instead.
 
 ## Classes Description
 
 ### CameraFrame [CameraFrame](library/frames/cameraframe.h)
 
-Basic class design to contain the data. It's got the semaphore - a counter, which increases once the frame is taken and decreases once its released.
+Basic class design to contain the data. It's got the semaphore - a counter, which increases once the frame is taken and decreases once it's released.
 
 It also has a pointer to next and previous frame.
 
@@ -47,9 +47,9 @@ There is one pure virtual function:
 ```
 virtual CameraFrame *newFrame(unsigned id) = 0;
 ```
-This function must be overriden. It contains the new frame creation and returns a pointer to it. The reason is that you want to create a TestFrame, for example, but the CameraFrameBuffer needs it as CameraFrame object to work with it.
+This function must be overridden. It contains the new frame creation and returns a pointer to it. The reason is that you want to create a TestFrame, for example, but the CameraFrameBuffer needs it as CameraFrame object to work with it.
 
-Since the newFrame() is virtual function, it SHOULD NOT be called from constructor - thus the function initializeFrames() is needed. This function prepares desired number of images and linkes them together.
+Since the newFrame() is virtual function, it SHOULD NOT be called from constructor - thus the function initializeFrames() is needed. This function prepares the desired number of images and links them together.
 
 Then there are multiple functions for accessing the CameraFrame frames. They are protected - the child class must decide which of them can be used as public.
 
@@ -73,11 +73,11 @@ which is a unique pointer to the frame, that does the releasing once destroyed. 
 
 ## Internal Work Description
 
-The frames are saved in vector. There is a reference to current frame and final frame. 
+The frames are saved in vector. There is a reference to the current frame and final frame. 
 - Current frame: next is always Final.
 - Final frame: last is always Current.
 
-The frames thus are represented as circular buffer. The circular buffer size can vary due to the data generating and data accessing.
+The frames thus are represented as a circular buffer. The circular buffer size can vary due to data generating and data accessing.
 
 Each frame itself also has a pointer to next and precious.
 
@@ -90,15 +90,15 @@ void setNewReady(CameraFrame *frame);
 ```
 are used for getting an unused and valid frame, that will be updated (populate with new data), and then set as ready.
 
-Since none or all frames can be taken or invalid, user must check if the frame is not a nullptr.
+Since none or all frames can be taken or invalid, the user must check if the frame is not a nullptr.
 
-If some frames are taken, they will not be updated until they are available. That means that they will be skipped in the getNewCurrent() function and will be "frozen", until updated again. 
+If some frames are taken, they will not be updated until they are available. That means that they will be skipped in the getNewCurrent() function and will be "frozen" until updated again. 
 
-So, for example, if you create buffer with 6 frames and 4 of them are taken for long period of time, only 2 frames are available for updating. Also the user can not get more than the 2 new frames, since the 4 taken frames are temporarily deleted from the circular buffer.
+So, for example, if you create a buffer with 6 frames and 4 of them are taken for a long period of time, only 2 frames are available for updating. Also, the user can not get more than the 2 new frames, since the 4 taken frames are temporarily deleted from the circular buffer.
 
 ## Recommendation
 
-I tried to test all the function to guarantee it to be thread safe. But for the est performance, you should always create enough frames in the buffer. If you know you application will take 32 frames at a time, make the buffer like 64 frames wide. 
+I tried to test all the function to guarantee it to be thread-safe. But for the best performance, you should always create enough frames in the buffer. If you know your application will take 32 frames at a time, make the buffer like 64 frames wide. 
 
 Once all frames are taken, it can not save new data.
 
