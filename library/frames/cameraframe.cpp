@@ -56,6 +56,21 @@ int64_t CameraFrame::getTimestamp() const
     return timestamp;
 }
 
+std::string CameraFrame::getTimeString() const
+{
+    std::time_t time = static_cast<std::time_t>(timestamp / 1000);
+    int64_t milli = timestamp - static_cast<int64_t>(time) * 1000;
+
+    std::tm * ptm = std::localtime(&time);
+    char bufferr[32];
+    int ret = std::strftime(bufferr, 32, "%H:%M:%S", ptm);
+
+    if (ret) {
+        return std::string(bufferr) + "." + std::to_string(milli);
+    }
+    return "";
+}
+
 bool CameraFrame::isValid() const
 {
     return valid;
@@ -91,7 +106,7 @@ bool CameraFrame::isUsed()
     return (semaphore != 0);
 }
 
-void CameraFrame::print()
+void CameraFrame::print() const
 {
     std::cout << last->getId() << " <- " << getId() << " -> " << next->getId() << std::endl;
 }

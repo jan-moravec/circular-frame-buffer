@@ -1,6 +1,5 @@
 #include <iostream>
 #include <thread>
-#include <chrono>
 #include <random>
 
 #include "library/test/testframebuffer.h"
@@ -31,10 +30,22 @@ int main()
             buffer.print();
             buffer.check();
         }
+
+        std::thread t_generate([&](){
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            buffer.generateNewData();
+        });
+
+        std::cout << "Waiting for new frame..." << std::endl;
+        buffer.waitForNew();
+        TestFrameBuffer::Frame frame = buffer.getCurrent();
+        std::cout << "Frame " << frame->getId() << " ready." << std::endl;
+
+        t_generate.join();
     }
 
     std::cout << std::endl << "Generating data, please wait..." << std::endl;
-    // Generating huge data check
+    // Generating huge data and checking sanity
     bool run = true;
     TestFrameBuffer buffer;
     buffer.initialize(128);
@@ -93,6 +104,6 @@ int main()
         t.join();
     }
 
-    std::cout << "Finished" << std::endl;
+    std::cout << "Finished." << std::endl;
     return 0;
 }

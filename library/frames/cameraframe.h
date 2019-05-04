@@ -2,6 +2,7 @@
 #define CAMERAFRAME_H
 
 #include <cstdint>
+#include <string>
 
 class CameraFrame
 {
@@ -13,7 +14,8 @@ public:
 
     unsigned getId() const;
     int64_t getTimestamp() const;
-    void print();
+    std::string getTimeString() const;
+    void print() const;
 
 protected:
     CameraFrame *getNext() const;
